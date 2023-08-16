@@ -21,7 +21,7 @@ contract Funding is ERC20, Ownable,ERC20Burnable {
         }
         function transferTokens(address _receiver, uint256 _value) public  {
             require(msg.sender!=bank);
-            require(balanceOf(msg .sender)>=_value,"You do not have enough Degen Tokens");
+            require(balanceOf(msg .sender)>=_value,"You do not have enough Tokens");
             approve(msg. sender,_value);
             transferFrom(msg.sender,_receiver,_value);
         }

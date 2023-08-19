@@ -1,54 +1,49 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.18;
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
-contract Crowdfunding {
-    address public owner;
-    uint public goal;
-    uint public deadline;
-    uint public raisedAmount = 0;
-    mapping(address => uint) public contributions;
-    bool public closed = false;
+contract Funding is Ownable {
+    using SafeMath for uint256;
 
-    event ContributionReceived(address contributor, uint amount);
+    address payable public beneficiary;
+    uint256 public fundingGoal;
+    uint256 public totalFunds;
 
-    constructor(uint _goal, uint _durationInDays) {
-        owner = msg.sender;
-        goal = _goal * 1 ether; // Convert to wei (Ether's smallest unit)
-        deadline = block.timestamp + (_durationInDays * 1 days);
+    mapping(address => uint256) public contributions;
+
+    enum CampaignStatus { Ongoing, Failed, Successful }
+    CampaignStatus public campaignStatus;
+
+    constructor(address payable _beneficiary, uint256 _fundingGoal) {
+        beneficiary = _beneficiary;
+        fundingGoal = _fundingGoal;
+        campaignStatus = CampaignStatus.Ongoing;
     }
 
-    modifier onlyOwner() {
-        require(msg.sender == owner, "Only the owner can call this function");
+    modifier onlyOngoingCampaign() {
+        require(campaignStatus == CampaignStatus.Ongoing, "Campaign is not ongoing");
         _;
     }
 
-    modifier notClosed() {
-        require(!closed, "The campaign is closed");
-        _;
+    function contribute() external payable onlyOngoingCampaign {
+        require(msg.value > 0, "Contribution amount must be greater than 0");
+        contributions[msg.sender] = contributions[msg.sender].add(msg.value);
+        totalFunds = totalFunds.add(msg.value);
     }
 
-    function contribute(uint contributionAmount) external notClosed {
-    require(block.timestamp < deadline, "The campaign has ended");
-    require(contributionAmount > 0, "Contribution amount must be greater than zero");
-
-    // Update the contributor's contribution amount
-    contributions[msg.sender] += contributionAmount;
-
-    // Update the total raised amount
-    raisedAmount += contributionAmount;
-
-    // Emit an event to log the contribution
-    emit ContributionReceived(msg.sender, contributionAmount);
-}
-
-
-    function closeCampaign() external onlyOwner {
-        require(block.timestamp >= deadline || raisedAmount >= goal, "The campaign is still active");
-        closed = true;
+    function checkGoalReached() external onlyOngoingCampaign {
+        if (totalFunds >= fundingGoal) {
+            campaignStatus = CampaignStatus.Successful;
+            emit CampaignSuccessful(totalFunds);
+            // Transfer funds to the beneficiary
+            beneficiary.transfer(totalFunds);
+        } else {
+            campaignStatus = CampaignStatus.Failed;
+            emit CampaignFailed(totalFunds);
+        }
     }
 
-    function withdrawFunds() external onlyOwner {
-        require(raisedAmount >= goal, "The goal has not been reached");
-        payable(owner).transfer(raisedAmount);
-    }
+    event CampaignSuccessful(uint256 totalAmount);
+    event CampaignFailed(uint256 totalAmount);
 }

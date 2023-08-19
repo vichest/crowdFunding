@@ -1,29 +1,54 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.18;
+pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
+contract Crowdfunding {
+    address public owner;
+    uint public goal;
+    uint public deadline;
+    uint public raisedAmount = 0;
+    mapping(address => uint) public contributions;
+    bool public closed = false;
 
-contract Funding is ERC20, Ownable,ERC20Burnable {
-    address bank = 0x5B38Da6a701c568545dCfcB03FcB875f56beddC4;  
+    event ContributionReceived(address contributor, uint amount);
 
-    constructor() ERC20("FUNDING", "FND") {}
+    constructor(uint _goal, uint _durationInDays) {
+        owner = msg.sender;
+        goal = _goal * 1 ether; // Convert to wei (Ether's smallest unit)
+        deadline = block.timestamp + (_durationInDays * 1 days);
+    }
 
-        function mint(address to, uint256 amount) public onlyOwner {
-            _mint(to, amount);
-        }
-        function decimals() override public pure returns (uint8) {
-            return 0;
-        }
-        function getBalance() external view returns (uint256) {
-            return this.balanceOf (msg. sender);
-        }
-        function transferTokens(address _receiver, uint256 _value) public  {
-            require(msg.sender!=bank);
-            require(balanceOf(msg .sender)>=_value,"You do not have enough Tokens");
-            approve(msg. sender,_value);
-            transferFrom(msg.sender,_receiver,_value);
-        }
-        
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only the owner can call this function");
+        _;
+    }
+
+    modifier notClosed() {
+        require(!closed, "The campaign is closed");
+        _;
+    }
+
+    function contribute(uint contributionAmount) external notClosed {
+    require(block.timestamp < deadline, "The campaign has ended");
+    require(contributionAmount > 0, "Contribution amount must be greater than zero");
+
+    // Update the contributor's contribution amount
+    contributions[msg.sender] += contributionAmount;
+
+    // Update the total raised amount
+    raisedAmount += contributionAmount;
+
+    // Emit an event to log the contribution
+    emit ContributionReceived(msg.sender, contributionAmount);
+}
+
+
+    function closeCampaign() external onlyOwner {
+        require(block.timestamp >= deadline || raisedAmount >= goal, "The campaign is still active");
+        closed = true;
+    }
+
+    function withdrawFunds() external onlyOwner {
+        require(raisedAmount >= goal, "The goal has not been reached");
+        payable(owner).transfer(raisedAmount);
+    }
 }

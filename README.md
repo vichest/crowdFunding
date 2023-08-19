@@ -1,61 +1,89 @@
 # Crowdfunding Smart Contract
 
-This is a simple Ethereum smart contract written in Solidity for conducting crowdfunding campaigns. It allows contributors to send Ether to the contract and tracks the progress towards a funding goal.
+This repository contains a Solidity smart contract for implementing a crowdfunding campaign. The contract allows users to contribute funds to the campaign and monitors the progress towards the funding goal. If the goal is reached, the campaign is marked as successful, and the funds are transferred to the campaign beneficiary. Otherwise, the campaign is marked as failed.
 
-## Features
+## Table of Contents
 
-- Accepts contributions from backers in the form of Ether.
-- Monitors the campaign progress by tracking the total raised amount and individual contributions.
-- Allows the contract owner to close the campaign when the goal is met or the deadline is reached.
-- Enables the owner to withdraw the funds once the goal is met.
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Usage](#usage)
+- [Contract Details](#contract-details)
+- [Contributing](#contributing)
+- [License](#license)
 
-## Contract Details
+## Getting Started
 
-- `owner`: The address of the account that deployed the contract.
-- `goal`: The funding goal in Ether (wei) that needs to be reached.
-- `deadline`: The timestamp representing the campaign deadline.
-- `raisedAmount`: The total amount of Ether raised from contributors.
-- `contributions`: A mapping that stores individual contributor addresses and their respective contribution amounts.
-- `closed`: A boolean flag indicating whether the campaign is closed.
+### Prerequisites
 
-## Functions
+- [Solidity Compiler](https://soliditylang.org/docs/getting-started.html#installing-the-solidity-compiler)
+- [Truffle](https://www.trufflesuite.com/docs/truffle/getting-started/installation)
+- [Ganache](https://www.trufflesuite.com/docs/ganache/quickstart)
 
-### `constructor(uint _goal, uint _durationInDays)`
+### Installation
 
-- Initializes the contract with the funding goal and campaign duration.
-- Converts `_goal` to wei to set the goal in Ether's smallest unit.
-- Sets the `deadline` as the current timestamp plus `_durationInDays`.
+1. Clone this repository to your local machine:
 
-### `contribute(uint contributionAmount)`
+   ```bash
+   git clone https://github.com/your-username/crowdfunding-smart-contract.git
+   ```
 
-- Allows backers to contribute to the campaign by specifying the `contributionAmount`.
-- Checks that the campaign is not closed and the deadline has not passed.
-- Updates the contributor's contribution amount and the total `raisedAmount`.
-- Emits a `ContributionReceived` event to log the contribution.
+2. Change to the project directory:
 
-### `closeCampaign()`
+   ```bash
+   cd crowdfunding-smart-contract
+   ```
 
-- Allows the contract owner to close the campaign.
-- Checks whether the campaign deadline has passed or the goal has been met.
-- Sets the `closed` flag to true, indicating that the campaign is closed.
+3. Compile the smart contract:
 
-### `withdrawFunds()`
+   ```bash
+   truffle compile
+   ```
 
-- Allows the contract owner to withdraw the raised funds.
-- Checks whether the goal has been met.
-- Transfers the entire raised amount to the contract owner's address.
+4. Deploy the smart contract to your local Ganache network:
+
+   ```bash
+   truffle migrate
+   ```
 
 ## Usage
 
-1. Deploy the smart contract on the Ethereum blockchain.
-2. Specify the funding goal and campaign duration when deploying.
-3. Contributors can call the `contribute` function with their desired contribution amount.
-4. Monitor the campaign progress by checking the `raisedAmount` and `contributions`.
-5. Once the campaign deadline is reached or the goal is met, the owner can call `closeCampaign`.
-6. If the goal is met, the owner can call `withdrawFunds` to receive the raised funds.
+1. Deploy the contract using the steps mentioned in the installation section.
+2. Interact with the contract using a tool like [Remix](https://remix.ethereum.org/) or a custom dApp.
+3. Users can contribute funds to the campaign by calling the `contribute` function with their desired contribution amount.
+4. The campaign status can be checked using the `checkGoalReached` function.
+5. If the funding goal is reached, the campaign status is marked as successful, and the funds are transferred to the beneficiary.
 
-**Note**: Make sure to test the contract thoroughly on a test network before deploying it to the mainnet.
+## Contract Details
+
+### Constructor
+
+The constructor accepts two parameters:
+- `_beneficiary` (address): The address that will receive the funds if the campaign is successful.
+- `_fundingGoal` (uint256): The target amount to be raised for the campaign.
+
+### Functions
+
+- `contribute`: Allows contributors to send Ether to the contract and make contributions to the campaign.
+
+- `checkGoalReached`: Checks whether the funding goal has been reached. If the goal is reached, the campaign is marked as successful, and the funds are transferred to the beneficiary.
+
+### Modifiers
+
+- `onlyOngoingCampaign`: Ensures that certain functions can only be called when the campaign is ongoing.
+
+### Events
+
+- `CampaignSuccessful`: Emitted when the campaign reaches the funding goal and is marked as successful. Provides information about the total amount raised.
+
+- `CampaignFailed`: Emitted when the campaign fails to reach the funding goal. Provides information about the total amount raised.
+
+## Contributing
+
+Contributions to this project are welcome. Feel free to open issues and pull requests if you have suggestions, bug fixes, or improvements.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the [MIT License](LICENSE).
+
+---

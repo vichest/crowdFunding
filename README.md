@@ -1,66 +1,61 @@
-# Funding Smart Contract
+# Crowdfunding Smart Contract
 
-## Overview
-
-The Funding smart contract is a Solidity-based Ethereum contract that implements a basic ERC20 token with additional functionalities. The contract is designed to facilitate the management and distribution of a custom token named "FUNDING" (FND). The contract inherits from OpenZeppelin's ERC20, Ownable, and ERC20Burnable contracts, which provide standard ERC20 token features, ownership control, and burnable capabilities, respectively.
+This is a simple Ethereum smart contract written in Solidity for conducting crowdfunding campaigns. It allows contributors to send Ether to the contract and tracks the progress towards a funding goal.
 
 ## Features
 
-- Token Name: FUNDING
-- Symbol: FND
+- Accepts contributions from backers in the form of Ether.
+- Monitors the campaign progress by tracking the total raised amount and individual contributions.
+- Allows the contract owner to close the campaign when the goal is met or the deadline is reached.
+- Enables the owner to withdraw the funds once the goal is met.
 
-The contract introduces the following functions:
+## Contract Details
 
-- `mint(address to, uint256 amount)`: Allows the contract owner to mint new FND tokens and send them to a specified address.
-- `decimals()`: Overrides the ERC20 function to return a fixed value of 0 as the token's decimal places.
-- `getBalance()`: Returns the balance of FND tokens held by the calling address.
-- `transferTokens(address _receiver, uint256 _value)`: Allows users to transfer FND tokens to a specified receiver address. This function enforces a check to prevent transfers from the designated `bank` address.
+- `owner`: The address of the account that deployed the contract.
+- `goal`: The funding goal in Ether (wei) that needs to be reached.
+- `deadline`: The timestamp representing the campaign deadline.
+- `raisedAmount`: The total amount of Ether raised from contributors.
+- `contributions`: A mapping that stores individual contributor addresses and their respective contribution amounts.
+- `closed`: A boolean flag indicating whether the campaign is closed.
 
-## Prerequisites
+## Functions
 
-- Solidity compiler version ^0.8.18
-- OpenZeppelin library: ERC20, Ownable, and ERC20Burnable
+### `constructor(uint _goal, uint _durationInDays)`
 
-## Installation
+- Initializes the contract with the funding goal and campaign duration.
+- Converts `_goal` to wei to set the goal in Ether's smallest unit.
+- Sets the `deadline` as the current timestamp plus `_durationInDays`.
 
-1. Clone this repository: `git clone https://github.com/your-username/your-repo.git`
-2. Navigate to the contract directory: `cd your-repo/contracts`
-3. Install dependencies: Make sure you have OpenZeppelin installed, or run `npm install @openzeppelin/contracts`
-4. Compile the smart contract: Use your preferred Solidity compiler to compile the `Funding.sol` file.
+### `contribute(uint contributionAmount)`
+
+- Allows backers to contribute to the campaign by specifying the `contributionAmount`.
+- Checks that the campaign is not closed and the deadline has not passed.
+- Updates the contributor's contribution amount and the total `raisedAmount`.
+- Emits a `ContributionReceived` event to log the contribution.
+
+### `closeCampaign()`
+
+- Allows the contract owner to close the campaign.
+- Checks whether the campaign deadline has passed or the goal has been met.
+- Sets the `closed` flag to true, indicating that the campaign is closed.
+
+### `withdrawFunds()`
+
+- Allows the contract owner to withdraw the raised funds.
+- Checks whether the goal has been met.
+- Transfers the entire raised amount to the contract owner's address.
 
 ## Usage
 
-1. Deploy the `Funding` smart contract to an Ethereum network.
-2. Interact with the contract using the available functions to manage and transfer FND tokens.
+1. Deploy the smart contract on the Ethereum blockchain.
+2. Specify the funding goal and campaign duration when deploying.
+3. Contributors can call the `contribute` function with their desired contribution amount.
+4. Monitor the campaign progress by checking the `raisedAmount` and `contributions`.
+5. Once the campaign deadline is reached or the goal is met, the owner can call `closeCampaign`.
+6. If the goal is met, the owner can call `withdrawFunds` to receive the raised funds.
 
-## Examples
-
-### Minting New Tokens
-
-To mint new FND tokens, call the `mint` function, providing the recipient's address and the amount of tokens to mint.
-
-```solidity
-function mintTokens(address recipient, uint256 amount) public onlyOwner {
-    mint(recipient, amount);
-}
-```
-
-### Transferring Tokens
-
-Users can transfer FND tokens to another address using the `transferTokens` function. Ensure you have enough tokens and execute the function as follows:
-
-```solidity
-function transferTo(address recipient, uint256 amount) public {
-    transferTokens(recipient, amount);
-}
-```
+**Note**: Make sure to test the contract thoroughly on a test network before deploying it to the mainnet.
 
 ## License
 
-This smart contract is released under the MIT License. See [LICENSE](./LICENSE) for more information.
-
----
-
-Remember to replace `"your-username/your-repo"` with your actual GitHub username and repository name. Additionally, ensure that the `LICENSE` file is present in your repository root directory and contains the appropriate MIT License text.
-
-Feel free to customize the README according to your needs and preferences.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
